@@ -152,8 +152,8 @@ func (s *ApprovalService) Reject(id, adminID uint, reason string) error {
 	}
 	now := time.Now()
 	adminName := s.adminName(adminID)
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		var app model.Application
+	var app model.Application
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&app, id).Error; err != nil {
 			return ErrNotFound
 		}
@@ -175,7 +175,12 @@ func (s *ApprovalService) Reject(id, adminID uint, reason string) error {
 			StatusText:   model.AppStatusText[model.AppStatusRejected],
 			OperatorName: operator, Remark: "拒绝原因：" + reason, CreateTime: now,
 		}).Error
-	})
+	}); err != nil {
+		return err
+	}
+	// 释放名额（事务外，与 Cancel 一致）：拒绝后该时段名额立即空出，避免"占着名额"浪费
+	s.apps.releaseSlot(app.SlotID, app.EntryDate)
+	return nil
 }
 
 // BatchResult 批量操作结果（失败隔离）

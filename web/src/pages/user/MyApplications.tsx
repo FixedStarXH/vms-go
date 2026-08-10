@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, Table, Tag, Button, Space, Modal, Typography, message, Form, Select, DatePicker, Input, Image } from 'antd'
 import { EyeOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { getApplicationList } from '@/api/modules/user/application'
+import { getApplicationList, cancelApplication } from '@/api/modules/user/application'
 
 const { RangePicker } = DatePicker
 
@@ -43,11 +43,12 @@ const MyApplicationsPage = () => {
   const [currentRecord, setCurrentRecord] = useState<ApplicationRecord | null>(null)
   const [pagination, setPagination] = useState({ pageNum: 1, pageSize: 10 })
 
-  const fetchList = async (params?: any) => {
+  // 页码显式传入，避免 setState 异步导致闭包里读到旧页码（翻页恒为第 1 页的 bug）
+  const fetchList = async (page: number, params?: any) => {
     setLoading(true)
     try {
       const res = await getApplicationList({
-        pageNum: pagination.pageNum,
+        pageNum: page,
         pageSize: pagination.pageSize,
         ...params,
       })
@@ -61,7 +62,7 @@ const MyApplicationsPage = () => {
   }
 
   useEffect(() => {
-    fetchList()
+    fetchList(1)
   }, [])
 
   const handleSearch = (values: any) => {
@@ -76,18 +77,18 @@ const MyApplicationsPage = () => {
       params.visitorName = values.visitorName
     }
     setPagination({ ...pagination, pageNum: 1 })
-    fetchList(params)
+    fetchList(1, params)
   }
 
   const handleReset = () => {
     form.resetFields()
     setPagination({ ...pagination, pageNum: 1 })
-    fetchList()
+    fetchList(1)
   }
 
   const handleTableChange = (page: any) => {
     setPagination({ pageNum: page.current, pageSize: page.pageSize })
-    fetchList()
+    fetchList(page.current)
   }
 
   const handleView = (record: ApplicationRecord) => {
@@ -95,15 +96,21 @@ const MyApplicationsPage = () => {
     setDetailVisible(true)
   }
 
-  const handleDelete = (id: string) => {
+  // 取消申请（真实调后端）：仅待审核可取消，取消后释放名额
+  const handleCancel = (id: string) => {
     Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这条申请记录吗？',
+      title: '确认取消',
+      content: '确定要取消这条待审核的申请吗？取消后将释放该时段名额。',
       okText: '确定',
-      cancelText: '取消',
-      onOk: () => {
-        setData(prev => prev.filter(item => item.id !== id))
-        message.success('删除成功')
+      cancelText: '再想想',
+      onOk: async () => {
+        try {
+          await cancelApplication(id)
+          message.success('已取消申请')
+          fetchList(pagination.pageNum)
+        } catch (error: any) {
+          message.error(error?.message || '取消失败')
+        }
       },
     })
   }
@@ -172,9 +179,11 @@ const MyApplicationsPage = () => {
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
             查看
           </Button>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>
-            删除
-          </Button>
+          {record.status === 'pending' && (
+            <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleCancel(record.id)}>
+              取消
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -281,7 +290,7 @@ const MyApplicationsPage = () => {
                   入校凭证（到校时出示，管理员扫码核销）
                 </Text>
                 <Image
-                  src={`/renren-fast/uploads/qrcode/${currentRecord.entryCode}.png`}
+                  src={`${import.meta.env.VITE_API_BASE_URL || ""}/uploads/qrcode/${currentRecord.entryCode}.png`}
                   alt="入校凭证二维码"
                   width={200}
                   height={200}

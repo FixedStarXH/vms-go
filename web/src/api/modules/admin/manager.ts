@@ -27,20 +27,22 @@ export const getUserList = (params?: {
   username?: string;
   phone?: string;
   status?: number;
+  pageNum?: number;
+  pageSize?: number;
 }) => {
-  return get("/renren-fast/admin/user/list", { params });
+  return get("/admin/user/list", { params });
 };
 
 export const getManagerList = () => {
-  return get("/renren-fast/admin/manager/list");
+  return get("/admin/manager/list");
 };
 
 export const addManager = (data: AddManagerParams) => {
-  return post("/renren-fast/admin/manager/add", data);
+  return post("/admin/manager/add", data);
 };
 
 export const deleteManager = (id: number) => {
-  return del(`/renren-fast/admin/manager/delete/${id}`);
+  return del(`/admin/manager/delete/${id}`);
 };
 
 export const updateUser = (data: {
@@ -51,7 +53,7 @@ export const updateUser = (data: {
   email?: string;
   roleIdList?: number[];
 }) => {
-  return post("/renren-fast/admin/user/update", data);
+  return post("/admin/user/update", data);
 };
 
 export const blacklistUser = (data: {
@@ -59,13 +61,13 @@ export const blacklistUser = (data: {
   action: "add" | "remove";
   reason?: string;
 }) => {
-  return put("/renren-fast/admin/manager/blacklist", data);
+  return put("/admin/manager/blacklist", data);
 };
 
 export const deleteUser = (id: number) => {
-  return post("/renren-fast/admin/user/delete", { userIds: [id] });
+  return post("/admin/user/delete", { userIds: [id] });
 };
 
 export const changePassword = (data: { newPassword: string }) => {
-  return post("/renren-fast/sys/password", data);
+  return post("/sys/password", data);
 };

@@ -60,6 +60,10 @@ func (s *RecordService) Verify(qrContent, gate string, operatorID uint) (*Verify
 
 	switch rec.RecordStatus {
 	case model.RecStatusWaiting:
+		// 入校时间窗校验：扫码须落在预约时段内（防未来/过期凭证）；时段未录入（零值）时跳过
+		if err := checkEntryWindow(now, rec.EntryStartTime, rec.EntryEndTime); err != nil {
+			return nil, err
+		}
 		// 首次核销：入校
 		rec.RecordStatus = model.RecStatusEntered
 		rec.ActualEntryTime = &now
@@ -91,6 +95,18 @@ func (s *RecordService) Verify(qrContent, gate string, operatorID uint) (*Verify
 	default:
 		return nil, fmt.Errorf("当前状态（%s）不可核销", model.RecStatusText[rec.RecordStatus])
 	}
+}
+
+// checkEntryWindow 入校时间窗校验：扫码时间须落在预约时段内。
+// 时段未录入（零值）时跳过，兼容历史数据/测试数据。
+func checkEntryWindow(now time.Time, start, end time.Time) error {
+	if !start.IsZero() && now.Before(start) {
+		return fmt.Errorf("未到入校时段（%s 起），请按时到校", start.Format("15:04"))
+	}
+	if !end.IsZero() && now.After(end) {
+		return fmt.Errorf("已过入校时段（%s 截止），请联系管理员", end.Format("15:04"))
+	}
+	return nil
 }
 
 // AdminList 入校记录列表（条件查询 + 分页）
@@ -168,11 +184,11 @@ func (s *RecordService) TodayOverview() map[string]any {
 	}
 
 	return map[string]any{
-		"totalAppointment": totalAppointment,
-		"entered":          entered,
-		"notEntered":       notEntered,
-		"currentTime":      nowTime,
-		"gateStats":        gateList,
+		"totalAppointment":  totalAppointment,
+		"entered":           entered,
+		"notEntered":        notEntered,
+		"currentTime":       nowTime,
+		"gateStats":         gateList,
 		"todayApplications": todayApps,
 	}
 }

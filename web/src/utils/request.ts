@@ -7,8 +7,11 @@ import axios, {
 import { getToken, removeUserInfo } from "@/utils/storage";
 import { useUserStore } from "@/stores/useUserStore";
 
+// API 基地址统一走环境变量（dev 直连 Go 后端，prod 配实际域名），未配置时同源
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
 const request: AxiosInstance = axios.create({
-  baseURL: "/",
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",

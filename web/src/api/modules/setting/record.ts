@@ -33,6 +33,7 @@ export interface ApplicationRecord {
 export interface UserQueryParams {
   page?: number;
   pageSize?: number;
+  keyword?: string;
   visitorName?: string;
   phone?: string;
   status?: number;
@@ -53,29 +54,29 @@ export const getMyRecords = async (params?: {
   page?: number;
   pageSize?: number;
 }) => {
-  const res: any = await get("/renren-fast/api/application/list", { params });
+  const res: any = await get("/api/application/list", { params });
   return res;
 };
 
 export const getUserRecordList = async (params?: UserQueryParams) => {
-  const res: any = await get("/renren-fast/admin/application/list", { params });
+  const res: any = await get("/admin/application/list", { params });
   return res;
 };
 
 export const getAdminRecordDetail = async (id: string) => {
-  const res: any = await get(`/renren-fast/admin/application/detail/${id}`);
+  const res: any = await get(`/admin/application/detail/${id}`);
   return res.data || res;
 };
 
 export const deleteUserRecord = async (id: number): Promise<void> => {
-  await del(`/renren-fast/admin/application/delete/${id}`);
+  await del(`/admin/application/delete/${id}`);
 };
 
 export const exportRecords = async (params?: {
   startDate?: string;
   endDate?: string;
 }): Promise<Blob> => {
-  const res: any = await get("/renren-fast/admin/application/export", {
+  const res: any = await get("/admin/application/export", {
     params,
     responseType: "blob",
   });

@@ -75,48 +75,48 @@ export interface ChangeUserPasswordParams {
 }
 
 export const getNotificationSettings = async (): Promise<NotificationSettings> => {
-  const res: any = await get('/renren-fast/api/settings/notification');
+  const res: any = await get('/api/settings/notification');
   return res.data || res;
 };
 
 export const saveNotificationSettings = async (data: NotificationSettings): Promise<void> => {
-  await post('/renren-fast/api/settings/notification', data);
+  await post('/api/settings/notification', data);
 };
 
 export const getNoShowConfig = async (): Promise<NoShowConfig> => {
-  const res: any = await get('/renren-fast/admin/config/no-show');
+  const res: any = await get('/admin/config/no-show');
   return res.data || res;
 };
 
 export const updateNoShowConfig = async (data: NoShowConfig): Promise<void> => {
-  await put('/renren-fast/admin/config/no-show', data);
+  await put('/admin/config/no-show', data);
 };
 
 export const updateVisitTimeConfig = async (data: VisitTimeConfig): Promise<void> => {
-  await put('/renren-fast/admin/config/visit-time', data);
+  await put('/admin/config/visit-time', data);
 };
 
 export const getSpecialDateList = async (params: SpecialDateParams): Promise<SpecialDateListResponse> => {
-  const res: any = await get('/renren-fast/admin/config/special-date/list', { params });
+  const res: any = await get('/admin/config/special-date/list', { params });
   return res.data || res.page || res;
 };
 
 export const addSpecialDate = async (data: AddSpecialDateParams): Promise<void> => {
-  await post('/renren-fast/admin/config/special-date/add', data);
+  await post('/admin/config/special-date/add', data);
 };
 
 export const updateSpecialDate = async (id: number, data: UpdateSpecialDateParams): Promise<void> => {
-  await put(`/renren-fast/admin/config/special-date/update/${id}`, data);
+  await put(`/admin/config/special-date/update/${id}`, data);
 };
 
 export const deleteSpecialDate = async (id: number): Promise<void> => {
-  await del(`/renren-fast/admin/config/special-date/delete/${id}`);
+  await del(`/admin/config/special-date/delete/${id}`);
 };
 
 export const updateUserInfo = async (data: UpdateUserInfoParams): Promise<void> => {
-  await post('/renren-fast/api/user/update', data);
+  await post('/api/user/update', data);
 };
 
 export const changeUserPassword = async (data: ChangeUserPasswordParams): Promise<void> => {
-  await post('/renren-fast/api/user/password', data);
+  await post('/api/user/password', data);
 };

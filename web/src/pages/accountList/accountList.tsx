@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Table,
@@ -31,42 +31,33 @@ const AccountListPage: React.FC = () => {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [displayAccounts, setDisplayAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [pageSize] = useState(10);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [editForm] = Form.useForm();
 
-  const fetchData = async (params?: {
-    username?: string;
-    phone?: string;
-    status?: number;
-  }) => {
+  // 服务端分页：关键词（用户名/手机号）+ 状态 + 页码一次交给后端，前端不再二次截断
+  const fetchData = async (
+    page: number,
+    params?: { username?: string; phone?: string; status?: number },
+  ) => {
     try {
       setLoading(true);
-      const res = (await getUserList(params)) as any;
+      const res = (await getUserList({
+        // 后端 keyword 同时匹配 用户名/手机号/姓名，取任一非空值传入
+        username: params?.username || params?.phone || "",
+        status: params?.status,
+        pageNum: page,
+        pageSize,
+      })) as any;
 
-      let listData: any[] = [];
-
-      if (res) {
-        if (res.page?.list && Array.isArray(res.page.list)) {
-          listData = res.page.list;
-        } else if (res.page?.records && Array.isArray(res.page.records)) {
-          listData = res.page.records;
-        } else if (res.data?.list && Array.isArray(res.data.list)) {
-          listData = res.data.list;
-        } else if (res.data && Array.isArray(res.data)) {
-          listData = res.data;
-        } else if (res.list && Array.isArray(res.list)) {
-          listData = res.list;
-        } else if (Array.isArray(res)) {
-          listData = res;
-        }
-      }
-
-      setDisplayAccounts(listData);
-      setCurrent(1);
+      const list = res?.data?.list || res?.list || [];
+      setAccounts(Array.isArray(list) ? list : []);
+      setTotal(res?.data?.total ?? res?.total ?? 0);
+      setCurrent(page);
     } catch (error) {
       console.error("获取数据失败:", error);
     } finally {
@@ -75,17 +66,17 @@ const AccountListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1);
   }, []);
 
   const handleQuery = () => {
     const values = form.getFieldsValue();
-    fetchData(values);
+    fetchData(1, values);
   };
 
   const handleRefresh = () => {
     form.resetFields();
-    fetchData();
+    fetchData(1);
   };
 
   const handleDelete = async (userId: number, username: string) => {
@@ -100,7 +91,7 @@ const AccountListPage: React.FC = () => {
         try {
           await deleteUser(userId);
           message.success("删除成功");
-          fetchData();
+          fetchData(current);
         } catch (error: any) {
           console.error("删除失败:", error);
           message.error(error?.message || "删除失败");
@@ -134,17 +125,10 @@ const AccountListPage: React.FC = () => {
           action,
           reason: "",
         });
-
-        setDisplayAccounts(
-          displayAccounts.map((item: any) =>
-            item.userId === editingAccount.userId
-              ? { ...item, status: values.status }
-              : item,
-          ),
-        );
       }
       setEditModalVisible(false);
       message.success("修改成功");
+      fetchData(current);
     } catch (error: any) {
       if (error?.errorFields) return;
       console.error("操作失败:", error);
@@ -205,14 +189,6 @@ const AccountListPage: React.FC = () => {
     },
   ];
 
-  const currentData = useMemo(() => {
-    const start = (current - 1) * pageSize;
-    const end = start + pageSize;
-    return displayAccounts.slice(start, end);
-  }, [displayAccounts, current, pageSize]);
-
-  const total = displayAccounts.length;
-
   return (
     <div>
       <Card className={styles.pageCard}>
@@ -254,7 +230,7 @@ const AccountListPage: React.FC = () => {
 
         <Table
           columns={columns}
-          dataSource={currentData}
+          dataSource={accounts}
           rowKey={(record: any) => record.userId || record.username}
           loading={loading}
           pagination={false}
@@ -270,7 +246,7 @@ const AccountListPage: React.FC = () => {
             total={total}
             showTotal={(t) => `共 ${t} 条`}
             showQuickJumper
-            onChange={(page) => setCurrent(page)}
+            onChange={(page) => fetchData(page, form.getFieldsValue())}
           />
         </div>
       </Card>

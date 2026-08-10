@@ -53,22 +53,22 @@ interface CaptchaData {
 }
 
 export const loginApi = (data: LoginParams): Promise<any> => {
-  return post<LoginResponse>("/renren-fast/api/user/login", data);
+  return post<LoginResponse>("/api/user/login", data);
 };
 
 export const registerApi = (data: RegisterParams): Promise<ApiResponse> => {
-  return post<ApiResponse>("/renren-fast/api/user/register", data);
+  return post<ApiResponse>("/api/user/register", data);
 };
 
 export const verifyTokenApi = (): Promise<ApiResponse<TokenData>> => {
-  return get<ApiResponse<TokenData>>("/renren-fast/api/user/auth/verify");
+  return get<ApiResponse<TokenData>>("/api/user/auth/verify");
 };
 
 export const refreshTokenApi = (
   refreshToken: string,
 ): Promise<ApiResponse<RefreshTokenData>> => {
   return post<ApiResponse<RefreshTokenData>>(
-    "/renren-fast/api/user/auth/refresh",
+    "/api/user/auth/refresh",
     {
       refreshToken,
     },
@@ -76,9 +76,9 @@ export const refreshTokenApi = (
 };
 
 export const getCaptchaApi = (): Promise<CaptchaData> => {
-  return get("/renren-fast/api/captcha");
+  return get("/api/captcha");
 };
 
 export const logoutApi = (): Promise<ApiResponse> => {
-  return post<ApiResponse>("/renren-fast/api/user/logout");
+  return post<ApiResponse>("/api/user/logout");
 };

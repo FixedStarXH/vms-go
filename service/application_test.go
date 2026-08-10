@@ -99,14 +99,29 @@ func TestSlotKey(t *testing.T) {
 	}
 }
 
-// TestNextRecordNoFormat 记录编号兜底格式：EC + 14 位时间戳 + 3 位随机（cache 为 nil 的降级路径）
+// TestNextRecordNoFormat 兜底编号格式：EC 开头 + 随机段（cache 为 nil 的降级路径），编号不可预测
 func TestNextRecordNoFormat(t *testing.T) {
 	s := &ApplicationService{} // cache == nil，走降级分支
 	no, err := s.nextRecordNo()
 	if err != nil {
 		t.Fatalf("nextRecordNo 失败: %v", err)
 	}
-	if !strings.HasPrefix(no, "EC") || len(no) != 19 {
-		t.Errorf("兜底记录编号格式不对: %q（期望 EC+时间戳+3位随机）", no)
+	if !strings.HasPrefix(no, "EC") || len(no) <= 19 {
+		t.Errorf("兜底记录编号格式不对: %q（期望 EC+时间戳+随机段，长度应超过旧版 19 位）", no)
+	}
+}
+
+// TestRandomHexUnique 随机段长度与唯一性（防枚举的关键：编号不可预测）
+func TestRandomHexUnique(t *testing.T) {
+	seen := map[string]bool{}
+	for i := 0; i < 1000; i++ {
+		h := randomHex(8)
+		if len(h) != 16 {
+			t.Fatalf("randomHex(8) 应为 16 位 hex，实际 %q", h)
+		}
+		if seen[h] {
+			t.Fatalf("随机段重复: %s", h)
+		}
+		seen[h] = true
 	}
 }

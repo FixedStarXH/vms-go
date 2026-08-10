@@ -1,4 +1,4 @@
-import { get, post } from "@/utils/request";
+import { get, post, put } from "@/utils/request";
 
 export interface SubmitApplicationParams {
   visitorName: string;
@@ -25,8 +25,12 @@ export interface ApplicationItem {
 }
 
 export const submitApplication = (data: SubmitApplicationParams) =>
-  post("/renren-fast/api/application/submit", data);
+  post("/api/application/submit", data);
 
 export const getApplicationList = (params?: any) => {
-  return get("/renren-fast/api/application/list", { params });
+  return get("/api/application/list", { params });
 };
+
+// 取消申请（仅待审核可取消，取消后释放名额）
+export const cancelApplication = (id: string) =>
+  put(`/api/application/cancel/${id}`);

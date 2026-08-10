@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Form,
@@ -25,95 +25,64 @@ const { RangePicker } = DatePicker;
 
 const TimeManagementPage: React.FC = () => {
   const [form] = Form.useForm();
-  const [allData, setAllData] = useState<ApplicationRecord[]>([]);
-  const [filteredData, setFilteredData] = useState<ApplicationRecord[]>([]);
+  const [data, setData] = useState<ApplicationRecord[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [current, setCurrent] = useState(1);
-  const [pageSize] = useState(7);
+  const [pageSize] = useState(10);
 
   useEffect(() => {
-    fetchList();
+    fetchList(1);
   }, []);
 
-  useEffect(() => {
-    setFilteredData(allData);
-  }, [allData]);
-
-  const currentData = useMemo(() => {
-    const start = (current - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredData.slice(start, end);
-  }, [filteredData, current, pageSize]);
-
-  const total = useMemo(() => filteredData.length, [filteredData]);
-
-  const fetchList = async (params?: Partial<UserQueryParams>) => {
+  // 服务端分页 + 服务端筛选：姓名/日期范围一次交给后端，前端不再二次截断
+  const fetchList = async (page: number) => {
     setLoading(true);
     try {
-      const res = await getUserRecordList(params || {});
+      const formValues = form.getFieldsValue();
+      const dateRange = formValues.dateRange;
 
-      let dataList: any[] = [];
-      const result = res as any;
-
-      if (result?.page?.list && Array.isArray(result.page.list)) {
-        dataList = result.page.list;
-      } else if (result?.page?.records && Array.isArray(result.page.records)) {
-        dataList = result.page.records;
-      } else if (result?.data?.list && Array.isArray(result.data.list)) {
-        dataList = result.data.list;
-      } else if (result?.list && Array.isArray(result.list)) {
-        dataList = result.list;
-      } else if (Array.isArray(result)) {
-        dataList = result;
-      } else if (Array.isArray(result?.data)) {
-        dataList = result.data;
+      let startDate: string | undefined;
+      let endDate: string | undefined;
+      if (dateRange && Array.isArray(dateRange) && dateRange.length === 2) {
+        startDate = dateRange[0].format("YYYY-MM-DD");
+        endDate = dateRange[1].format("YYYY-MM-DD");
       }
 
-      if (dataList.length > 0) {
-        dataList = dataList.filter(
-          (item: any) => item.deleted !== 1 && item.deleted !== "1",
-        );
-      }
+      const queryParams: UserQueryParams = {
+        page,
+        pageSize,
+        keyword: String(formValues.name || "").trim() || undefined,
+        startDate,
+        endDate,
+      };
 
-      setAllData(dataList);
-      setFilteredData(dataList);
+      const res = (await getUserRecordList(queryParams)) as any;
+      const list = res?.data?.list || res?.list || [];
+      setData(
+        Array.isArray(list)
+          ? list.filter((item: any) => item.deleted !== 1 && item.deleted !== "1")
+          : [],
+      );
+      setTotal(res?.data?.total ?? res?.total ?? 0);
+      setCurrent(page);
     } catch (err) {
       console.error("查询失败:", err);
-      setAllData([]);
-      setFilteredData([]);
+      setData([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = () => {
-    setCurrent(1);
     form.resetFields();
-    fetchList({});
+    fetchList(1);
     message.success("数据已刷新");
   };
 
   const handleQuery = () => {
-    setCurrent(1);
-    const formValues = form.getFieldsValue();
-
-    const filtered = allData.filter((item) => {
-      if (formValues.name && !item.visitorName?.includes(formValues.name)) {
-        return false;
-      }
-      if (formValues.dateRange && formValues.dateRange.length === 2) {
-        const startDate = formValues.dateRange[0].format("YYYY-MM-DD");
-        const endDate = formValues.dateRange[1].format("YYYY-MM-DD");
-        const itemDate = item.entryDate ? item.entryDate.split(" ")[0] : "";
-        if (itemDate < startDate || itemDate > endDate) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    setFilteredData(filtered);
-    message.success(`筛选完成，共找到 ${filtered.length} 条记录`);
+    fetchList(1);
   };
 
   const handleExport = () => {
@@ -128,7 +97,7 @@ const TimeManagementPage: React.FC = () => {
       "车牌号",
       "审批状态",
     ];
-    const rows = filteredData.map((item) => [
+    const rows = data.map((item) => [
       item.visitorName,
       item.entryDate,
       item.entryStartTime,
@@ -249,7 +218,7 @@ const TimeManagementPage: React.FC = () => {
 
         <Table
           columns={columns}
-          dataSource={currentData}
+          dataSource={data}
           rowKey="id"
           loading={loading}
           pagination={false}
@@ -272,7 +241,7 @@ const TimeManagementPage: React.FC = () => {
             total={total}
             showTotal={(t) => `共 ${t} 条`}
             showQuickJumper
-            onChange={(page) => setCurrent(page)}
+            onChange={(page) => fetchList(page)}
           />
         </div>
       </Card>

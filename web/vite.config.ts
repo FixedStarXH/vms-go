@@ -51,14 +51,6 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3005,
-      proxy: {
-        // Go 后端无 /renren-fast 前缀，代理时去掉
-        "/renren-fast": {
-          target: "http://127.0.0.1:8081",
-          changeOrigin: true,
-          rewrite: (p) => p.replace(/^\/renren-fast/, ""),
-        },
-      },
     },
     build: {
       rollupOptions: {

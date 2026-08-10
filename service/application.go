@@ -1,6 +1,8 @@
 package service
 
 import (
+	cryptorand "crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -379,18 +381,34 @@ func genApplicationNo() string {
 	return fmt.Sprintf("APP%s%03d", time.Now().Format("20060102150405.000"), seq)
 }
 
-// nextRecordNo 生成记录编号：EC + 日期 + Redis 原子序列（防并发重复），Redis 不可用降级时间戳+随机
+// nextRecordNo 生成记录编号：EC + 日期 + Redis 原子序列（防并发重复）+ 随机段（防枚举）。
+// 随机段（crypto/rand，64 位）让编号不可预测：即使静态目录暴露，也无法遍历下载他人二维码。
+// Redis 不可用降级为时间戳+随机（仍带随机段）。
 func (s *ApplicationService) nextRecordNo() (string, error) {
 	date := time.Now().Format("20060102")
+	core := ""
 	if s.cache != nil {
 		key := "ers:record:seq:" + date
 		if n, err := s.cache.Eval(incrExpireLua, []string{key}, 2*24*3600); err == nil {
 			if seq, ok := n.(int64); ok {
-				return fmt.Sprintf("EC%s%06d", date, seq), nil
+				core = fmt.Sprintf("%s%06d", date, seq)
 			}
 		}
 	}
-	return fmt.Sprintf("EC%s%03d", time.Now().Format("20060102150405"), rand.Intn(1000)), nil
+	if core == "" {
+		core = time.Now().Format("20060102150405") + fmt.Sprintf("%03d", rand.Intn(1000))
+	}
+	return "EC" + core + randomHex(8), nil
+}
+
+// randomHex 生成 n 字节随机数的 hex 串（crypto/rand），用于凭证编号防枚举。
+// crypto/rand 失败（极小概率）降级为时间戳+进程随机，保证编号不重复、长度不减。
+func randomHex(nBytes int) string {
+	b := make([]byte, nBytes)
+	if _, err := cryptorand.Read(b); err != nil {
+		return fmt.Sprintf("%x%x", time.Now().UnixNano(), rand.Int63())
+	}
+	return hex.EncodeToString(b)
 }
 
 // buildDateTime 由日期 + HH:MM 构建本地时区时间

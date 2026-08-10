@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Form,
@@ -80,144 +80,83 @@ const StatusTag: React.FC<{ status: string | number }> = ({ status }) => {
 const RecordPage: React.FC = () => {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
-  const [allData, setAllData] = useState<ApplicationRecord[]>([]);
+  const [data, setData] = useState<ApplicationRecord[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [current, setCurrent] = useState(1);
-  const [pageSize] = useState(7);
-  const [filteredData, setFilteredData] = useState<ApplicationRecord[]>([]);
-
-  useEffect(() => {
-    setFilteredData(allData);
-  }, [allData]);
-
-  const currentData = useMemo(() => {
-    const start = (current - 1) * pageSize;
-    const end = start + pageSize;
-    return filteredData.slice(start, end);
-  }, [filteredData, current, pageSize]);
-
-  const total = useMemo(() => filteredData.length, [filteredData]);
+  const [pageSize] = useState(10);
 
   useEffect(() => {
     const savedFilter = getFilterFromStorage();
     if (Object.keys(savedFilter).length > 0) {
       form.setFieldsValue(savedFilter);
     }
+    fetchList(1);
   }, []);
 
-  useEffect(() => {
-    fetchList();
-  }, []);
+  // 关键词取"最精确"的一项：记录编号 > 手机号 > 姓名（后端 keyword 同时匹配三字段）
+  const buildKeyword = (v: any): string => {
+    const recordNo = String(v.recordNo || "").trim();
+    if (recordNo) return recordNo;
+    const phone = String(v.phone || "").trim();
+    if (phone) return phone;
+    return String(v.name || "").trim();
+  };
 
-  const fetchList = async (params?: Partial<UserQueryParams>) => {
+  // 服务端分页 + 服务端筛选：页码/关键词/状态/日期一次交给后端，前端不再二次截断
+  const fetchList = async (page: number, extra?: Partial<UserQueryParams>) => {
     setLoading(true);
     try {
       const formValues = form.getFieldsValue();
-      const queryParams: UserQueryParams =
-        params && Object.keys(params).length > 0
-          ? (params as UserQueryParams)
-          : {
-            visitorName: formValues.name,
-            phone: formValues.phone,
-            status: formValues.status,
-          };
+      const queryParams: UserQueryParams = {
+        page,
+        pageSize,
+        keyword: buildKeyword({ ...formValues, ...(extra?.keyword ? { keyword: extra.keyword } : {}) }),
+        status: formValues.status || undefined,
+        startDate: extra?.startDate,
+        endDate: extra?.endDate,
+      };
 
-      const res = await getUserRecordList(queryParams);
-
-      let dataList: any[] = [];
-      const result = res as any;
-
-      if (result?.page?.list && Array.isArray(result.page.list)) {
-        dataList = result.page.list;
-      } else if (result?.page?.records && Array.isArray(result.page.records)) {
-        dataList = result.page.records;
-      } else if (result?.data?.list && Array.isArray(result.data.list)) {
-        dataList = result.data.list;
-      } else if (result?.list && Array.isArray(result.list)) {
-        dataList = result.list;
-      } else if (Array.isArray(result)) {
-        dataList = result;
-      } else if (Array.isArray(result?.data)) {
-        dataList = result.data;
-      }
-
-      if (dataList.length > 0) {
-        dataList = dataList.filter(
-          (item: any) => item.deleted !== 1 && item.deleted !== "1",
-        );
-      }
-
-      setAllData(dataList);
-      setCurrent(1);
+      const res = (await getUserRecordList(queryParams)) as any;
+      const list = res?.data?.list || res?.list || [];
+      setData(
+        Array.isArray(list)
+          ? list.filter((item: any) => item.deleted !== 1 && item.deleted !== "1")
+          : [],
+      );
+      setTotal(res?.data?.total ?? res?.total ?? 0);
+      setCurrent(page);
     } catch (err) {
       console.error("查询失败:", err);
-      setAllData([]);
+      setData([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = () => {
-    setCurrent(1);
     form.resetFields();
     localStorage.removeItem(FILTER_STORAGE_KEY);
-    fetchList({});
+    fetchList(1);
     message.success("数据已刷新");
   };
 
   const handleQuery = () => {
-    setCurrent(1);
     const formValues = form.getFieldsValue();
     saveFilterToStorage(formValues);
-
-    const filtered = allData.filter((item) => {
-      if (formValues.name && !item.visitorName?.includes(formValues.name)) {
-        return false;
-      }
-      if (formValues.phone && !item.phone?.includes(formValues.phone)) {
-        return false;
-      }
-      if (
-        formValues.recordNo &&
-        !item.applicationNo?.includes(formValues.recordNo)
-      ) {
-        return false;
-      }
-      if (
-        formValues.status !== undefined &&
-        formValues.status !== "" &&
-        formValues.status !== null
-      ) {
-        if (item.status?.toString() !== formValues.status?.toString()) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    setFilteredData(filtered);
-    message.success(`筛选完成，共找到 ${filtered.length} 条记录`);
+    fetchList(1);
   };
 
   const handleTodayQuery = () => {
-    setCurrent(1);
     const todayStr = new Date().toISOString().split("T")[0];
-
-    const filtered = allData.filter((item) => {
-      if (!item.entryDate) return false;
-      const itemDate = item.entryDate.split(" ")[0];
-      return itemDate === todayStr;
-    });
-
-    setFilteredData(filtered);
     form.setFieldsValue({
       name: undefined,
       phone: undefined,
       recordNo: undefined,
       status: undefined,
     });
-
-    message.success(`今天共找到 ${filtered.length} 条入校记录`);
+    fetchList(1, { startDate: todayStr, endDate: todayStr });
   };
 
   const handleExport = () => {
@@ -235,7 +174,7 @@ const RecordPage: React.FC = () => {
       "审批状态",
       "创建时间",
     ];
-    const rows = filteredData.map((item) => [
+    const rows = data.map((item) => [
       item.applicationNo,
       item.visitorName,
       item.phone,
@@ -289,7 +228,7 @@ const RecordPage: React.FC = () => {
         try {
           await deleteUserRecord(id);
           message.success("删除成功");
-          fetchList();
+          fetchList(current);
         } catch (err: any) {
           console.error("删除失败:", err);
           message.error("删除失败");
@@ -435,7 +374,7 @@ const RecordPage: React.FC = () => {
 
         <Table
           columns={columns}
-          dataSource={currentData}
+          dataSource={data}
           rowKey="id"
           loading={loading}
           pagination={false}
@@ -469,7 +408,7 @@ const RecordPage: React.FC = () => {
             total={total}
             showTotal={(t) => `共 ${t} 条`}
             showQuickJumper
-            onChange={(page) => setCurrent(page)}
+            onChange={(page) => fetchList(page)}
           />
         </div>
       </Card>

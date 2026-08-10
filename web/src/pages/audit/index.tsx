@@ -449,7 +449,7 @@ const AuditPage = () => {
                   入校凭证二维码（门卫核销时扫描）
                 </strong>
                 <Image
-                  src={`/renren-fast/uploads/qrcode/${selectedRecord.entryCode}.png`}
+                  src={`${import.meta.env.VITE_API_BASE_URL || ""}/uploads/qrcode/${selectedRecord.entryCode}.png`}
                   alt="入校凭证二维码"
                   width={200}
                   height={200}
