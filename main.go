@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -28,6 +29,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("连接数据库失败: %v", err)
 	}
+	// 连接池调优：限制最大连接数避免打爆 MySQL（max_connections 默认 151）
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("获取底层连接池失败: %v", err)
+	}
+	sqlDB.SetMaxOpenConns(80)                  // 最大打开连接（留出余量给管理端/压测）
+	sqlDB.SetMaxIdleConns(20)                  // 最大空闲连接
+	sqlDB.SetConnMaxLifetime(30 * time.Minute) // 连接最长存活，避免长时间占用
 	if err := model.AutoMigrate(db); err != nil {
 		log.Fatalf("初始化表结构失败: %v", err)
 	}

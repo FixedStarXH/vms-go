@@ -218,7 +218,8 @@ func (s *ApplicationService) reserveSlot(tx *gorm.DB, slotID uint, date string, 
 		res, err := s.cache.Eval(reserveLua, []string{key}, maxCount, 15*24*3600)
 		if err == nil {
 			if n, ok := res.(int64); ok {
-				if n > int64(maxCount) {
+				// Lua 超限返回 -1（已 INCR，需回退）；正常返回 1..maxCount
+				if n == -1 || n > int64(maxCount) {
 					// 已 INCR，超限需回退
 					s.cache.Decr(key)
 					return false, nil
