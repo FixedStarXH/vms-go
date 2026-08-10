@@ -40,6 +40,7 @@ type JWTConfig struct {
 type AppConfig struct {
 	QRDir               string
 	QRSecret            string
+	UploadDir           string // 上传文件根目录（静态资源挂载点）
 	NoShowCheckMinutes  int
 	NoShowMaxCount      int // 爽约次数达到该值自动拉黑
 	NoShowBlacklistDays int // 自动拉黑天数
@@ -76,6 +77,7 @@ func Load(path string) (*Config, error) {
 		App: AppConfig{
 			QRDir:               v.GetString("app.qr_dir"),
 			QRSecret:            v.GetString("app.qr_secret"),
+			UploadDir:           v.GetString("app.upload_dir"),
 			NoShowCheckMinutes:  v.GetInt("app.no_show_check_minutes"),
 			NoShowMaxCount:      v.GetInt("app.no_show.max_count"),
 			NoShowBlacklistDays: v.GetInt("app.no_show.blacklist_days"),
@@ -86,6 +88,9 @@ func Load(path string) (*Config, error) {
 	}
 	if cfg.Server.Port == 0 {
 		cfg.Server.Port = 8081
+	}
+	if cfg.App.UploadDir == "" {
+		cfg.App.UploadDir = "uploads"
 	}
 	if cfg.App.CaptchaWidth <= 0 {
 		cfg.App.CaptchaWidth = 150

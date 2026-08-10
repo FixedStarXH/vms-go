@@ -90,6 +90,6 @@ func Setup(r *gin.Engine, deps *controller.Deps, rc *cache.RedisCache, cfg *conf
 		adminGroup.DELETE("/manager/delete/:id", mgr.ManagerDelete)
 	}
 
-	// 二维码图片静态资源
-	r.Static("/uploads", cfg.App.QRDir)
+	// 上传文件静态资源（qrcode 等子目录统一挂在 uploads 下）
+	r.Static("/uploads", cfg.App.UploadDir)
 }

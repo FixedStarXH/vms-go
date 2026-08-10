@@ -20,7 +20,9 @@ jwt:
   refresh_expire_days: 7
 
 app:
-  # 二维码图片输出目录（相对项目根）
+  # 上传文件根目录（静态资源挂载点，含 qrcode 子目录）
+  upload_dir: "uploads"
+  # 二维码图片输出目录（相对 upload_dir）
   qr_dir: "uploads/qrcode"
   # 二维码签名密钥（防伪，务必更换）
   qr_secret: "CHANGE_ME_QR_SECRET"
