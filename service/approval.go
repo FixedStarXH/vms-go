@@ -69,6 +69,10 @@ func (s *ApprovalService) Detail(id uint) (map[string]any, error) {
 		s.db.Where("application_id = ?", id).First(&rec)
 		if rec.RecordID > 0 {
 			m["record"] = recordToMap(&rec)
+			// 完整二维码内容（含 HMAC 签名），供核销页复制/扫码演示
+			if rec.QRCodeContent != "" {
+				m["qrContent"] = rec.QRCodeContent
+			}
 		}
 	}
 	return m, nil

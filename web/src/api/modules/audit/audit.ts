@@ -18,6 +18,7 @@ export interface VisitorRecord {
   status: number;
   rejectReason: string | null;
   entryCode: string | null;
+  qrContent?: string; // 完整二维码内容（含 HMAC 签名），核销页可用
   attachmentUrl: string | null;
   approvalUserId: number | null;
   approvalTime: string | null;

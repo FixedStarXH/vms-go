@@ -9,8 +9,10 @@ import {
   Input,
   message,
   Modal,
+  Image,
 } from "antd";
 import styles from "./index.module.scss";
+import { CopyOutlined } from "@ant-design/icons";
 import {
   getAuditList,
   approveAudit,
@@ -236,71 +238,41 @@ const AuditPage = () => {
       title: "申请编号",
       dataIndex: "applicationNo",
       key: "applicationNo",
-      width: 180,
+      width: 150,
     },
     {
       title: "访客姓名",
       dataIndex: "visitorName",
       key: "visitorName",
-      width: 100,
-    },
-    {
-      title: "手机号",
-      dataIndex: "phone",
-      key: "phone",
-      width: 130,
-    },
-    {
-      title: "来访单位",
-      dataIndex: "visitUnit",
-      key: "visitUnit",
-      width: 150,
-    },
-    {
-      title: "来访事由",
-      dataIndex: "reason",
-      key: "reason",
-      width: 120,
+      width: 90,
     },
     {
       title: "入校日期",
       dataIndex: "entryDate",
       key: "entryDate",
-      width: 120,
+      width: 110,
     },
     {
       title: "入校时间",
       dataIndex: "entryStartTime",
       key: "entryStartTime",
-      width: 180,
+      width: 160,
       render: (_: unknown, record: VisitorRecord) =>
         record.entryStartTime && record.entryEndTime
           ? `${record.entryStartTime.split(" ")[1] || record.entryStartTime} - ${record.entryEndTime.split(" ")[1] || record.entryEndTime}`
           : "-",
     },
     {
-      title: "同行人数",
-      dataIndex: "companionCount",
-      key: "companionCount",
-      width: 80,
-    },
-    {
-      title: "车牌号",
-      dataIndex: "vehiclePlate",
-      key: "vehiclePlate",
-      width: 110,
-    },
-    {
       title: "审批状态",
       dataIndex: "status",
       key: "status",
-      width: 100,
+      width: 90,
       render: (status: number) => getStatusTag(status),
     },
     {
       title: "操作",
       key: "action",
-      width: 200,
+      width: 150,
       render: (_: unknown, record: VisitorRecord) => (
         <Space size="small">
           <Button
@@ -391,7 +363,6 @@ const AuditPage = () => {
             showTotal: (t) => `共 ${t} 条`,
           }}
           onChange={handleTableChange}
-          scroll={{ x: 1400 }}
         />
       </Card>
 
@@ -463,6 +434,50 @@ const AuditPage = () => {
                 <strong>审批备注：</strong>
                 {selectedRecord.approvalRemark}
               </p>
+            )}
+            {selectedRecord.status === 1 && selectedRecord.entryCode && (
+              <div
+                style={{
+                  marginTop: 16,
+                  textAlign: "center",
+                  padding: "16px",
+                  background: "#fafafa",
+                  borderRadius: 8,
+                }}
+              >
+                <strong style={{ display: "block", marginBottom: 8 }}>
+                  入校凭证二维码（门卫核销时扫描）
+                </strong>
+                <Image
+                  src={`/renren-fast/uploads/qrcode/${selectedRecord.entryCode}.png`}
+                  alt="入校凭证二维码"
+                  width={200}
+                  height={200}
+                  style={{ border: "1px solid #eee", borderRadius: 8 }}
+                />
+                <p style={{ marginTop: 8, fontSize: 12, color: "#999" }}>
+                  凭证编号：{selectedRecord.entryCode}
+                </p>
+                {selectedRecord.qrContent && (
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          selectedRecord.qrContent || "",
+                        );
+                        message.success("二维码内容已复制，可在【门禁核销】页粘贴");
+                      } catch {
+                        message.error("复制失败，请手动复制");
+                      }
+                    }}
+                  >
+                    复制二维码内容（用于核销演示）
+                  </Button>
+                )}
+              </div>
             )}
             <p>
               <strong>创建时间：</strong>

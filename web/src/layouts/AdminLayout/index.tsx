@@ -5,6 +5,7 @@ import {
   SettingOutlined,
   BarChartOutlined,
   CheckCircleOutlined,
+  ScanOutlined,
   LogoutOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
@@ -100,6 +101,11 @@ const AdminLayout = () => {
         icon: <CheckCircleOutlined />,
         label: <Link to="/admin/audit">审批申请</Link>,
       },
+      {
+        key: "/admin/verify",
+        icon: <ScanOutlined />,
+        label: <Link to="/admin/verify">门禁核销</Link>,
+      },
     ];
   }, [userInfo?.userType]);
 
@@ -117,6 +123,7 @@ const AdminLayout = () => {
       return "/admin/time-management";
     if (pathname.startsWith("/admin/settings")) return "/admin/settings";
     if (pathname.startsWith("/admin/audit")) return "/admin/audit";
+    if (pathname.startsWith("/admin/verify")) return "/admin/verify";
     return "/admin";
   }, [location.pathname]);
 

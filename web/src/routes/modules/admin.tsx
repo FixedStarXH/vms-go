@@ -10,6 +10,7 @@ const QueryRecord = lazy(() => import("@/pages/record"));
 const TimeManagement = lazy(() => import("@/pages/time-management"));
 const Settings = lazy(() => import("@/pages/settings"));
 const Audit = lazy(() => import("@/pages/audit"));
+const Verify = lazy(() => import("@/pages/verify"));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -47,6 +48,10 @@ export const adminRoutes: RouteObject[] = [
       {
         path: "audit",
         element: <Audit />,
+      },
+      {
+        path: "verify",
+        element: <Verify />,
       },
     ],
   },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Card, Table, Tag, Button, Space, Modal, Typography, message, Form, Select, DatePicker, Input } from 'antd'
+import { Card, Table, Tag, Button, Space, Modal, Typography, message, Form, Select, DatePicker, Input, Image } from 'antd'
 import { EyeOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { getApplicationList } from '@/api/modules/user/application'
@@ -19,7 +19,8 @@ interface ApplicationRecord {
   reason: string
   companionCount: number
   vehiclePlate?: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'no_show' | 'done'
+  entryCode?: string
   createdAt: string
 }
 
@@ -27,6 +28,9 @@ const statusMap: Record<string, { color: string; text: string }> = {
   pending: { color: 'gold', text: '待审核' },
   approved: { color: 'green', text: '已通过' },
   rejected: { color: 'red', text: '已拒绝' },
+  cancelled: { color: 'default', text: '已取消' },
+  no_show: { color: 'purple', text: '已爽约' },
+  done: { color: 'blue', text: '已完成' },
 }
 
 const MyApplicationsPage = () => {
@@ -271,6 +275,23 @@ const MyApplicationsPage = () => {
               <Text type="secondary">入校原因：</Text>
               <Paragraph style={{ marginTop: 4 }}>{currentRecord.reason}</Paragraph>
             </div>
+            {currentRecord.status === 'approved' && currentRecord.entryCode && (
+              <div style={{ marginBottom: 16, textAlign: 'center', padding: '16px', background: '#fafafa', borderRadius: 8 }}>
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                  入校凭证（到校时出示，管理员扫码核销）
+                </Text>
+                <Image
+                  src={`/renren-fast/uploads/qrcode/${currentRecord.entryCode}.png`}
+                  alt="入校凭证二维码"
+                  width={200}
+                  height={200}
+                  style={{ border: '1px solid #eee', borderRadius: 8 }}
+                />
+                <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 12 }}>
+                  凭证编号：{currentRecord.entryCode}
+                </Text>
+              </div>
+            )}
             <div>
               <Text type="secondary">申请时间：</Text><Text>{new Date(currentRecord.createdAt).toLocaleString('zh-CN')}</Text>
             </div>
