@@ -1,0 +1,143 @@
+@import "@/config/styles/variables.scss";
+
+.commonLayout {
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.sider {
+  background-color: #02182ce8 !important;
+
+  :global(.ant-layout-sider-children) {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.logoArea {
+  height: 70px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #03223f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logoBox {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-right: 30px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.logoImg {
+  width: 140px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.logoText {
+  font-size: 25px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  margin-left: -30px;
+  white-space: nowrap;
+}
+
+.header {
+  height: var(--height-header);
+  background-color: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+  justify-content: space-between;
+}
+
+.systemName {
+  font-size: 16px;
+  color: #27b1c4;
+}
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.welcomeText {
+  color: #27b1c4;
+  font-size: 16px;
+}
+
+.avatar {
+  width: var(--size-avatar);
+  height: var(--size-avatar);
+}
+
+.menu {
+  flex: 1;
+  background-color: transparent !important;
+  border: none !important;
+
+  :global(.ant-menu-item) {
+    color: rgba(255, 255, 255, 0.85) !important;
+    margin: 4px 0;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      color: #fff !important;
+    }
+  }
+
+  :global(.ant-menu-item-selected) {
+    background-color: var(--color-primary) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  :global(.ant-menu-submenu-title) {
+    color: rgba(255, 255, 255, 0.85) !important;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15) !important;
+      color: #fff !important;
+    }
+  }
+
+  :global(.ant-menu-sub) {
+    background-color: transparent !important;
+  }
+
+  :global(.ant-menu-submenu-selected) {
+    :global(.ant-menu-submenu-title) {
+      color: #fff !important;
+    }
+  }
+
+  :global(.ant-menu-submenu-arrow) {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  :global(
+    .ant-menu-submenu:hover > .ant-menu-submenu-title > .ant-menu-submenu-arrow
+  ) {
+    color: #fff !important;
+  }
+}
+
+.content {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background-color: var(--color-bg-page);
+}

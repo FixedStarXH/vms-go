@@ -1,0 +1,40 @@
+// @import "@/config/styles/variables.scss";
+
+.pageCard {
+  background-color: var(--color-bg-card);
+  padding: var(--spacing-md);
+  width: 100%;
+  min-height: calc(100vh - var(--height-header) - var(--spacing-lg) * 2);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.pageTitle {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin: 0;
+}
+
+.queryForm {
+  margin-bottom: var(--spacing-lg);
+}
+
+.table {
+  margin-bottom: var(--spacing-lg);
+}
+
+.pagination {
+  text-align: center;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 0;
+  color: #999;
+  font-size: 14px;
+}

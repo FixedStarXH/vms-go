@@ -1,0 +1,31 @@
+.auditPage {
+  padding: 24px;
+}
+
+.searchForm {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 8px;
+
+  :global {
+    .ant-form-item {
+      margin-bottom: 16px;
+      margin-right: 16px;
+    }
+  }
+}
+
+.detailContent {
+  p {
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 1.8;
+
+    strong {
+      display: inline-block;
+      width: 100px;
+      color: #666;
+    }
+  }
+}

@@ -11,3 +11,9 @@ uploads/
 # 测试临时文件
 test-*.json
 t*.json
+
+# 前端缓存/构建产物
+web/.npm-cache/
+web/node_modules/
+web/dist/
+web/.vite/

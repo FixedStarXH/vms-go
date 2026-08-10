@@ -1,0 +1,25 @@
+.settingsPage {
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+
+  :global {
+    .ant-tabs-nav {
+      margin-bottom: 24px;
+    }
+
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+
+    .ant-input-number {
+      margin-right: 8px;
+    }
+  }
+}
+
+.emptyTip {
+  text-align: center;
+  color: #999;
+  padding: 48px 0;
+}

@@ -1,0 +1,44 @@
+# Dependencies
+/node_modules/
+
+# Build outputs
+/dist/
+dist-ssr/
+
+# IDE
+/.idea/
+/.vscode/
+*.local
+
+# Environment variables (sensitive)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+/coverage/
+/.claude/
+/docs/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
