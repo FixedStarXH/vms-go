@@ -40,7 +40,8 @@ export default defineConfig(({ mode }) => {
       react(),
       viteMockServe({
         mockPath: "mock",
-        enable: mode === "development" && !env.VITE_API_BASE_URL,
+        // mock 仅由 VITE_USE_MOCK 显式开启，与 API 基址解耦（开发默认走 Vite 代理到 Go 后端）
+        enable: mode === "development" && env.VITE_USE_MOCK === "true",
       }),
       versionPlugin(appVersion),
     ],
@@ -51,6 +52,21 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 3005,
+      // 开发环境代理：前端请求全部走同源相对路径，由 Vite 转发到 Go 后端，
+      // 避免浏览器跨源子资源请求被系统代理/网络策略拦截。
+      // 注意：/admin 只能精确匹配后端 API 前缀（/admin/application 等），
+      // 顶层 /admin 是前端管理端页面路由（/admin/audit 等），绝不能代理，否则页面 404。
+      proxy: {
+        "/api": { target: "http://localhost:8081", changeOrigin: true },
+        "/sys": { target: "http://localhost:8081", changeOrigin: true },
+        "/uploads": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/application": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/monitor": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/visitor": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/record": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/user": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/manager": { target: "http://localhost:8081", changeOrigin: true },
+      },
     },
     build: {
       rollupOptions: {

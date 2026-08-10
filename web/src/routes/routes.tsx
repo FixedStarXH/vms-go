@@ -6,7 +6,6 @@ import { adminRoutes } from "./modules/admin";
 import UserLayout from "@/components/layout/UserLayout";
 import { NotFoundPage } from "@/pages/exception/404";
 import { ForbiddenPage } from "@/pages/exception/403";
-import { useUserStore } from "@/stores/useUserStore";
 
 const Login = lazy(() =>
   import("@/pages/login").then((m) => ({ default: m.LoginPage })),
@@ -14,14 +13,8 @@ const Login = lazy(() =>
 
 const LoginFallback = () => null;
 
-// 根路径：按登录态与角色重定向（避免直接命中 404）
-const HomeRedirect = () => {
-  const { token, userInfo } = useUserStore();
-  if (!token) return <Navigate to="/login" replace />;
-  const roles = userInfo?.roles || [];
-  const isAdmin = roles.includes("管理员") || roles.includes("超级管理员");
-  return <Navigate to={isAdmin ? "/admin" : "/user"} replace />;
-};
+// 根路径：统一进入登录页（登录成功后由登录页按角色跳转 /admin 或 /user）
+const HomeRedirect = () => <Navigate to="/login" replace />;
 
 export const routes: RouteObject[] = [
   {

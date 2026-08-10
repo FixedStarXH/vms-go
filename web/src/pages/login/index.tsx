@@ -81,9 +81,9 @@ function Login() {
       }
     } catch (error: any) {
       const errorMsg =
+        error?.message ||
         error?.msg ||
         error?.response?.data?.msg ||
-        error?.message ||
         "登录请求失败，请稍后重试";
       message.error(errorMsg);
       captchaRef.current?.refresh();

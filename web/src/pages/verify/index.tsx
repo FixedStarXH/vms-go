@@ -45,7 +45,9 @@ const VerifyPage = () => {
       setResult(data);
       message.success(data?.message || "核销成功");
     } catch (error: any) {
-      message.error(error?.msg || "核销失败，请检查二维码内容");
+      // 后端业务错误经请求拦截器 reject 为 Error，消息在 error.message（如"已过入校时段…"）；
+      // 部分直出响应 msg 字段，兼容两者，避免错误被笼统的兜底文案吞掉
+      message.error(error?.message || error?.msg || "核销失败，请检查二维码内容");
     } finally {
       setLoading(false);
     }

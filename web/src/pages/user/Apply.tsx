@@ -33,7 +33,8 @@ const ApplyPage = () => {
       message.success('申请提交成功！')
       form.resetFields()
     } catch (error: any) {
-      message.error(error?.msg || '申请提交失败，请重试')
+      // 后端业务错误经请求拦截器 reject 为 Error，消息在 error.message
+      message.error(error?.message || error?.msg || '申请提交失败，请重试')
     } finally {
       setLoading(false)
     }
