@@ -1,0 +1,86 @@
+# 一键部署：docker compose up -d --build
+# 访问 http://localhost:3005 （前端入口：Nginx 托管静态资源 + 反代后端）
+# 默认管理员：admin / admin123（首次启动自动建表 + 种子数据，见 model/init.go）
+#
+# 说明：
+# - MySQL/Redis 不映射宿主机端口（只在 compose 内部网络互访），不会和本地已装的冲突；
+#   如需外部工具连接，把 ports 注释取消即可
+# - ers-web 的 3005 若与本地已启动的服务冲突，改下面 ports 的左侧宿主机端口即可
+# - JWT/二维码密钥在环境变量中，首次部署建议改成随机长字符串
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ers-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "ers_go"
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+    # ports:
+    #   - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p123456" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: ers-redis
+    restart: unless-stopped
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis-data:/data
+    # ports:
+    #   - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ers-server:
+    build: .
+    container_name: ers-server
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # 环境变量名 = ERS_ 前缀 + 全大写路径（ERS_MYSQL_DSN → mysql.dsn，见 config/config.go）
+      ERS_SERVER_MODE: "release"
+      ERS_MYSQL_DSN: "root:123456@tcp(mysql:3306)/ers_go?charset=utf8mb4&parseTime=True&loc=Local"
+      ERS_REDIS_ADDR: "redis:6379"
+      ERS_REDIS_PASSWORD: ""
+      ERS_REDIS_DB: "0"
+      ERS_JWT_SECRET: "change-me-jwt-secret-2026"
+      ERS_APP_UPLOAD_DIR: "uploads"
+      ERS_APP_QR_DIR: "uploads/qrcode"
+      ERS_APP_QR_SECRET: "change-me-qr-secret-2026"
+      ERS_APP_NO_SHOW_CHECK_MINUTES: "10"
+      ERS_APP_NO_SHOW_MAX_COUNT: "3"
+      ERS_APP_NO_SHOW_BLACKLIST_DAYS: "30"
+    volumes:
+      # 上传文件 / 二维码图片落宿主机，容器重建不丢
+      - ./uploads:/app/uploads
+
+  ers-web:
+    build:
+      context: ./web
+      args:
+        # 同源直连真实后端（非空即禁用 MSW mock，见 web/Dockerfile 说明）
+        VITE_API_BASE_URL: "/"
+    container_name: ers-web
+    restart: unless-stopped
+    depends_on:
+      - ers-server
+    ports:
+      - "3005:80"
+
+volumes:
+  mysql-data:
+  redis-data:

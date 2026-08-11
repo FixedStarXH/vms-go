@@ -1,0 +1,9 @@
+# 排除项（web 前端构建上下文）
+node_modules
+dist
+.git
+.gitignore
+.github
+.mock
+*.log
+Dockerfile

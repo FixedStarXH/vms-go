@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -62,7 +63,11 @@ func Load(path string) (*Config, error) {
 			return nil, fmt.Errorf("读取配置文件失败: %w", err)
 		}
 	}
+	// 环境变量覆盖：ERS_ 前缀 + 点号转下划线（ERS_MYSQL_DSN → mysql.dsn）。
+	// 必须配 SetEnvKeyReplacer，否则 AutomaticEnv 查的是 "ERS_JWT.SECRET"（含点号），
+	// 环境变量名不允许点号，永远匹配不到。
 	v.SetEnvPrefix("ERS")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
 	cfg := &Config{

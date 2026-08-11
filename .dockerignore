@@ -1,0 +1,12 @@
+# 排除项（Docker 构建上下文）
+.git
+.gitignore
+web/node_modules
+web/dist
+node_modules
+config.yaml
+config.example.yaml
+uploads
+*.log
+Dockerfile
+docker-compose.yml
