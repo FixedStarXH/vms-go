@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
         "/admin/record": { target: "http://localhost:8081", changeOrigin: true },
         "/admin/user": { target: "http://localhost:8081", changeOrigin: true },
         "/admin/manager": { target: "http://localhost:8081", changeOrigin: true },
+        "/admin/slot": { target: "http://localhost:8081", changeOrigin: true },
       },
     },
     build: {

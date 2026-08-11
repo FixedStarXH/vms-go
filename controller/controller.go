@@ -18,6 +18,7 @@ type Deps struct {
 	Visitor   *service.VisitorService
 	Manager   *service.ManagerService
 	Dashboard *service.DashboardService
+	Slot      *service.SlotService
 }
 
 // uid 从鉴权中间件取当前登录用户 ID

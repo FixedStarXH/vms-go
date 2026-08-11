@@ -58,10 +58,12 @@ func main() {
 	visitorSvc := service.NewVisitorService(db, rc, cfg)
 	managerSvc := service.NewManagerService(db, cfg)
 	dashSvc := service.NewDashboardService(db)
+	slotSvc := service.NewSlotService(db)
 
 	deps := &controller.Deps{
 		Auth: authSvc, Captcha: captchaSvc, Apps: appSvc, Approval: approvalSvc,
 		Record: recordSvc, Visitor: visitorSvc, Manager: managerSvc, Dashboard: dashSvc,
+		Slot: slotSvc,
 	}
 
 	// 启动爽约检测定时任务

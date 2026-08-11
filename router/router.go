@@ -19,6 +19,7 @@ func Setup(r *gin.Engine, deps *controller.Deps, rc *cache.RedisCache, cfg *conf
 	admin := controller.NewAdminController(deps)
 	rec := controller.NewRecordController(deps)
 	mgr := controller.NewManagerController(deps)
+	slot := controller.NewSlotController(deps)
 
 	jwt := middleware.JWTAuth(rc, cfg.JWT.Secret)
 
@@ -88,6 +89,12 @@ func Setup(r *gin.Engine, deps *controller.Deps, rc *cache.RedisCache, cfg *conf
 		adminGroup.GET("/manager/list", mgr.ManagerList)
 		adminGroup.POST("/manager/add", mgr.ManagerAdd)
 		adminGroup.DELETE("/manager/delete/:id", mgr.ManagerDelete)
+
+		// 系统设置：入校时段配置
+		adminGroup.GET("/slot/list", slot.List)
+		adminGroup.POST("/slot/save", slot.Save)
+		adminGroup.PUT("/slot/status/:id", slot.Toggle)
+		adminGroup.DELETE("/slot/delete/:id", slot.Delete)
 	}
 
 	// 上传文件静态资源（qrcode 等子目录统一挂在 uploads 下）

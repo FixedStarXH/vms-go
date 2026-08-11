@@ -92,11 +92,6 @@ const AdminLayout = () => {
         ],
       },
       {
-        key: "/admin/settings",
-        icon: <SettingOutlined />,
-        label: <Link to="/admin/settings">系统设置</Link>,
-      },
-      {
         key: "/admin/audit",
         icon: <CheckCircleOutlined />,
         label: <Link to="/admin/audit">审批申请</Link>,
@@ -105,6 +100,11 @@ const AdminLayout = () => {
         key: "/admin/verify",
         icon: <ScanOutlined />,
         label: <Link to="/admin/verify">门禁核销</Link>,
+      },
+      {
+        key: "/admin/settings",
+        icon: <SettingOutlined />,
+        label: <Link to="/admin/settings">系统设置</Link>,
       },
     ];
   }, [userInfo?.userType]);
@@ -121,9 +121,9 @@ const AdminLayout = () => {
       return "/admin/query-record";
     if (pathname.startsWith("/admin/time-management"))
       return "/admin/time-management";
-    if (pathname.startsWith("/admin/settings")) return "/admin/settings";
     if (pathname.startsWith("/admin/audit")) return "/admin/audit";
     if (pathname.startsWith("/admin/verify")) return "/admin/verify";
+    if (pathname.startsWith("/admin/settings")) return "/admin/settings";
     return "/admin";
   }, [location.pathname]);
 
