@@ -129,7 +129,17 @@ func runBench(db *gorm.DB, cfg *config.Config, base string, n int, slotID uint) 
 // concurrentSubmit 所有账号同时发起请求，返回结果与整个并发窗口耗时
 func concurrentSubmit(base, date string, slotID uint, users []model.User, tokens []string) ([]submitResult, time.Duration) {
 	n := len(users)
-	client := &http.Client{Timeout: 30 * time.Second}
+	// 连接池要大：默认 MaxIdleConnsPerHost=2，500 并发首次全部建新连接会突刺，
+	// Windows 下部分连接直接被服务端拒绝（dial refused），拖慢整体并污染失败统计
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			MaxIdleConns:        1024,
+			MaxIdleConnsPerHost: 1024,
+			MaxConnsPerHost:     1024,
+			IdleConnTimeout:     90 * time.Second,
+		},
+	}
 	start := make(chan struct{})
 	results := make([]submitResult, n)
 	var wg sync.WaitGroup
