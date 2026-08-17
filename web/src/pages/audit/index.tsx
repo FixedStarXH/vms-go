@@ -24,6 +24,19 @@ import type { VisitorRecord, AuditParams } from "@/api/modules/audit/audit";
 
 const AUDIT_STATUS_STORAGE_KEY = "audit_status_cache";
 
+// 复制到剪贴板降级方案：HTTP 非安全上下文下 navigator.clipboard 不可用，
+// 用临时 textarea + document.execCommand('copy') 兼容。
+function copyByExecCommand(text: string) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
+}
+
 const AuditPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -449,7 +462,7 @@ const AuditPage = () => {
                   入校凭证二维码（门卫核销时扫描）
                 </strong>
                 <Image
-                  src={`${import.meta.env.VITE_API_BASE_URL || ""}/uploads/qrcode/${selectedRecord.entryCode}.png`}
+                  src={`/uploads/qrcode/${selectedRecord.entryCode}.png`}
                   alt="入校凭证二维码"
                   width={200}
                   height={200}
@@ -464,13 +477,24 @@ const AuditPage = () => {
                     size="small"
                     icon={<CopyOutlined />}
                     onClick={async () => {
+                      const text = selectedRecord.qrContent || "";
                       try {
-                        await navigator.clipboard.writeText(
-                          selectedRecord.qrContent || "",
-                        );
+                        // HTTP 非安全上下文下 navigator.clipboard 不可用，优先用 Clipboard API，
+                        // 失败回退到 execCommand('copy')（兼容 http:// 部署）
+                        if (navigator.clipboard && window.isSecureContext) {
+                          await navigator.clipboard.writeText(text);
+                          message.success("二维码内容已复制，可在【门禁核销】页粘贴");
+                          return;
+                        }
+                        copyByExecCommand(text);
                         message.success("二维码内容已复制，可在【门禁核销】页粘贴");
                       } catch {
-                        message.error("复制失败，请手动复制");
+                        try {
+                          copyByExecCommand(text);
+                          message.success("二维码内容已复制，可在【门禁核销】页粘贴");
+                        } catch {
+                          message.error("复制失败，请手动复制");
+                        }
                       }
                     }}
                   >

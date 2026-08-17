@@ -290,7 +290,7 @@ const MyApplicationsPage = () => {
                   入校凭证（到校时出示，管理员扫码核销）
                 </Text>
                 <Image
-                  src={`${import.meta.env.VITE_API_BASE_URL || ""}/uploads/qrcode/${currentRecord.entryCode}.png`}
+                  src={`/uploads/qrcode/${currentRecord.entryCode}.png`}
                   alt="入校凭证二维码"
                   width={200}
                   height={200}
